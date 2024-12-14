@@ -8,6 +8,7 @@ import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -17,15 +18,15 @@ public class UserService {
     private UserRepository userRepository;
     
     @Autowired
-    private PasswordEncoder passwordEncoder;
-    
-    @Autowired
     private VerificationTokenRepository tokenRepository;
     
     @Autowired
     private EmailService emailService;
     
-    public User registerUser(String email, String password, String name) throws MessagingException {
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    public void registerUser(String email, String password, String name) throws MessagingException {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new RuntimeException("Пользователь с таким email уже существует");
         }
@@ -35,16 +36,11 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(password));
         user.setName(name);
         user.setEnabled(false);
-        
-        user = userRepository.save(user);
+        userRepository.save(user);
         
         String token = UUID.randomUUID().toString();
-        VerificationToken verificationToken = new VerificationToken(user, token);
-        tokenRepository.save(verificationToken);
-        
+        createVerificationToken(user, token);
         emailService.sendVerificationEmail(user.getEmail(), token);
-        
-        return user;
     }
     
     public boolean verifyUser(String token) {
@@ -54,14 +50,19 @@ public class UserService {
         }
         
         User user = verificationToken.getUser();
-        if (user == null) {
+        if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            tokenRepository.delete(verificationToken);
             return false;
         }
         
         user.setEnabled(true);
         userRepository.save(user);
         tokenRepository.delete(verificationToken);
-        
         return true;
+    }
+    
+    private void createVerificationToken(User user, String token) {
+        VerificationToken verificationToken = new VerificationToken(user, token);
+        tokenRepository.save(verificationToken);
     }
 } 
