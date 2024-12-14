@@ -22,6 +22,14 @@ target/
 .vscode/
 
 ### Firebase ###
+firebase-config.json
 src/main/resources/firebase-config.json
-taskdb.mv.db
-taskdb.trace.db
+
+### Database ###
+*.db
+*.mv.db
+*.trace.db
+taskdb.*
+
+### Environment Variables ###
+.env
