@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.Random;
 
 @Service
 public class UserService {
@@ -38,13 +38,19 @@ public class UserService {
         user.setEnabled(false);
         userRepository.save(user);
         
-        String token = UUID.randomUUID().toString();
-        createVerificationToken(user, token);
-        emailService.sendVerificationEmail(user.getEmail(), token);
+        String verificationCode = generateVerificationCode();
+        createVerificationToken(user, verificationCode);
+        emailService.sendVerificationCode(user.getEmail(), verificationCode);
     }
     
-    public boolean verifyUser(String token) {
-        VerificationToken verificationToken = tokenRepository.findByToken(token);
+    private String generateVerificationCode() {
+        Random random = new Random();
+        return String.format("%06d", random.nextInt(1000000));
+    }
+    
+    public boolean verifyUser(String code) {
+        VerificationToken verificationToken = tokenRepository.findByCode(code)
+            .orElse(null);
         if (verificationToken == null) {
             return false;
         }
@@ -64,5 +70,59 @@ public class UserService {
     private void createVerificationToken(User user, String token) {
         VerificationToken verificationToken = new VerificationToken(user, token);
         tokenRepository.save(verificationToken);
+    }
+    
+    public void resendVerificationCode(String email) throws MessagingException {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        
+        if (user.isEnabled()) {
+            throw new RuntimeException("Пользователь уже подтвержден");
+        }
+        
+        // Удаляем старый токен, если есть
+        tokenRepository.findByUser(user).ifPresent(tokenRepository::delete);
+        
+        // Создаем новый код и отправляем
+        String verificationCode = generateVerificationCode();
+        createVerificationToken(user, verificationCode);
+        emailService.sendVerificationCode(user.getEmail(), verificationCode);
+    }
+    
+    public void linkTelegramChat(String email, Long chatId) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        
+        if (!user.isEnabled()) {
+            throw new RuntimeException("Аккаунт не подтвержден");
+        }
+        
+        user.setTelegramChatId(chatId);
+        userRepository.save(user);
+    }
+    
+    public User findByTelegramChatId(Long chatId) {
+        return userRepository.findByTelegramChatId(chatId)
+            .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+    }
+    
+    public void addReminder(User user, int hours) {
+        if (hours <= 0) {
+            throw new RuntimeException("Количество часов должно быть положительным");
+        }
+        user.getReminderHours().add(hours);
+        userRepository.save(user);
+    }
+    
+    public void removeReminder(User user, int hours) {
+        if (!user.getReminderHours().remove(hours)) {
+            throw new RuntimeException("Напоминание за " + hours + " часов не найдено");
+        }
+        userRepository.save(user);
+    }
+    
+    public void clearReminders(User user) {
+        user.getReminderHours().clear();
+        userRepository.save(user);
     }
 } 

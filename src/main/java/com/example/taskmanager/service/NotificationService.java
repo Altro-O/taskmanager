@@ -1,12 +1,15 @@
 package com.example.taskmanager.service;
 
 import com.example.taskmanager.model.Task;
+import com.example.taskmanager.model.User;
 import com.example.taskmanager.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -14,30 +17,63 @@ public class NotificationService {
     
     @Autowired
     private TaskRepository taskRepository;
+    
+    @Autowired
+    private TelegramService telegramService;
+    
+    @Autowired
+    private EmailService emailService;
 
-    // Проверка дедлайнов каждый час
-    @Scheduled(fixedRate = 3600000)
-    public void checkDeadlines() {
+    @Scheduled(fixedRate = 900000) // Каждые 15 минут
+    public void checkDeadlinesAndNotify() {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime dayAhead = now.plusDays(1);
-
-        List<Task> tasksToNotify = taskRepository.findAll().stream()
-            .filter(task -> !task.isCompleted())
-            .filter(task -> !task.isNotified())
-            .filter(task -> task.getDeadline() != null)
-            .filter(task -> task.getDeadline().isBefore(dayAhead))
-            .toList();
-
-        for (Task task : tasksToNotify) {
-            sendNotification(task);
-            task.setNotified(true);
-            taskRepository.save(task);
+        List<Task> tasks = taskRepository.findByCompletedFalse();
+        
+        for (Task task : tasks) {
+            User user = task.getUser();
+            if (task.getDeadline() == null || task.isNotified()) continue;
+            
+            for (Integer hours : user.getReminderHours()) {
+                LocalDateTime reminderTime = task.getDeadline().minusHours(hours);
+                if (now.isAfter(reminderTime) && now.isBefore(reminderTime.plusMinutes(15))) {
+                    sendNotification(task, hours);
+                    if (hours == Collections.min(user.getReminderHours())) {
+                        task.setNotified(true);
+                        taskRepository.save(task);
+                    }
+                }
+            }
         }
     }
 
-    private void sendNotification(Task task) {
-        // В реальном приложении здесь был бы код отправки уведомления
-        System.out.println("УВЕДОМЛЕНИЕ: Задача '" + task.getTitle() + 
-                         "' должна быть выполнена до " + task.getDeadline());
+    private void sendNotification(Task task, int hours) {
+        User user = task.getUser();
+        String message = String.format(
+            "⚠️ Напоминание!\nЗадача \"%s\" должна быть выполнена через %d %s\n" +
+            "Дедлайн: %s\nПриоритет: %s",
+            task.getTitle(),
+            hours,
+            formatHours(hours),
+            formatDateTime(task.getDeadline()),
+            task.getPriority().getDisplayName()
+        );
+
+        if (user.isEnableTelegramNotifications() && user.getTelegramChatId() != null) {
+            telegramService.sendNotification(user.getTelegramChatId(), message);
+        }
+
+        if (user.isEnableEmailNotifications()) {
+            emailService.sendNotification(user.getEmail(), "Напоминание о за��аче", message);
+        }
+    }
+
+    private String formatHours(int hours) {
+        if (hours % 10 == 1 && hours != 11) return "час";
+        if (hours % 10 >= 2 && hours % 10 <= 4 && (hours < 12 || hours > 14)) return "часа";
+        return "часов";
+    }
+
+    private String formatDateTime(LocalDateTime dateTime) {
+        return dateTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
     }
 } 

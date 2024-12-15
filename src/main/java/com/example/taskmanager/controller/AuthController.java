@@ -5,9 +5,8 @@ import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class AuthController {
@@ -24,32 +23,59 @@ public class AuthController {
     public String registerUser(@RequestParam String email,
                              @RequestParam String password,
                              @RequestParam String name,
-                             Model model) {
+                             RedirectAttributes redirectAttributes) {
         try {
             userService.registerUser(email, password, name);
-            return "redirect:/login?verify";
+            redirectAttributes.addFlashAttribute("email", email);
+            return "redirect:/verify";
         } catch (MessagingException e) {
-            model.addAttribute("error", "Ошибка при отправке email для подтверждения");
-            return "register";
+            redirectAttributes.addFlashAttribute("error", "Ошибка при отправке кода подтверждения");
+            return "redirect:/register";
         } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-            return "register";
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/register";
         }
     }
     
     @GetMapping("/verify")
-    public String verifyUser(@RequestParam String token, Model model) {
-        if (userService.verifyUser(token)) {
-            model.addAttribute("message", "Аккаунт успешно подтвержден! Теперь вы можете войти.");
-            return "login";
+    public String showVerificationPage(@ModelAttribute("email") String email, Model model) {
+        if (email == null || email.isEmpty()) {
+            return "redirect:/register";
+        }
+        model.addAttribute("email", email);
+        return "verify";
+    }
+    
+    @PostMapping("/verify-code")
+    public String verifyCode(@RequestParam String code, 
+                           RedirectAttributes redirectAttributes) {
+        if (userService.verifyUser(code)) {
+            redirectAttributes.addFlashAttribute("message", 
+                "Email успешно подтвержден! Теперь вы можете войти.");
+            return "redirect:/login";
         } else {
-            model.addAttribute("error", "Неверный или устаревший токен подтверждения.");
-            return "login";
+            redirectAttributes.addFlashAttribute("error", 
+                "Неверный или устаревший код подтверждения.");
+            return "redirect:/verify";
         }
     }
     
     @GetMapping("/login")
     public String login() {
         return "login";
+    }
+
+    @PostMapping("/resend-code")
+    public String resendVerificationCode(@RequestParam String email, 
+                                       RedirectAttributes redirectAttributes) {
+        try {
+            userService.resendVerificationCode(email);
+            redirectAttributes.addFlashAttribute("message", 
+                "Новый код подтверждения отправлен на вашу почту");
+        } catch (MessagingException e) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Ошибка при отправке нового кода подтверждения");
+        }
+        return "redirect:/verify";
     }
 } 

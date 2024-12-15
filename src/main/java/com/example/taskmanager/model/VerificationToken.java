@@ -14,7 +14,7 @@ public class VerificationToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String token;
+    private String code;
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
@@ -23,13 +23,13 @@ public class VerificationToken {
     private LocalDateTime expiryDate;
 
     public VerificationToken() {
-        this.expiryDate = LocalDateTime.now().plusHours(24);
+        this.expiryDate = LocalDateTime.now().plusMinutes(15);
     }
 
-    public VerificationToken(User user, String token) {
+    public VerificationToken(User user, String code) {
         this();
         this.user = user;
-        this.token = token;
+        this.code = code;
     }
 
     // Геттеры
@@ -37,8 +37,8 @@ public class VerificationToken {
         return id;
     }
 
-    public String getToken() {
-        return token;
+    public String getCode() {
+        return code;
     }
 
     public User getUser() {
@@ -54,8 +54,8 @@ public class VerificationToken {
         this.id = id;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public void setUser(User user) {

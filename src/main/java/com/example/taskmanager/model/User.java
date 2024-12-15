@@ -3,6 +3,9 @@ package com.example.taskmanager.model;
 import lombok.Getter;
 import lombok.Setter;
 import jakarta.persistence.*;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
 
 @Getter
 @Setter
@@ -18,6 +21,13 @@ public class User {
     private String password;
     private boolean enabled;
     private String name;
+    private Long telegramChatId;
+
+    @ElementCollection
+    private Set<Integer> reminderHours = new HashSet<>(Arrays.asList(24, 1)); // По умолчанию за 24 часа и за 1 час
+
+    private boolean enableTelegramNotifications = true;
+    private boolean enableEmailNotifications = true;
 
     // Геттеры
     public Long getId() {
@@ -44,6 +54,22 @@ public class User {
         return name;
     }
 
+    public Long getTelegramChatId() {
+        return telegramChatId;
+    }
+
+    public Set<Integer> getReminderHours() {
+        return reminderHours;
+    }
+
+    public boolean isEnableTelegramNotifications() {
+        return enableTelegramNotifications;
+    }
+
+    public boolean isEnableEmailNotifications() {
+        return enableEmailNotifications;
+    }
+
     // Сеттеры
     public void setId(Long id) {
         this.id = id;
@@ -67,5 +93,21 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setTelegramChatId(Long telegramChatId) {
+        this.telegramChatId = telegramChatId;
+    }
+
+    public void setReminderHours(Set<Integer> reminderHours) {
+        this.reminderHours = reminderHours;
+    }
+
+    public void setEnableTelegramNotifications(boolean enableTelegramNotifications) {
+        this.enableTelegramNotifications = enableTelegramNotifications;
+    }
+
+    public void setEnableEmailNotifications(boolean enableEmailNotifications) {
+        this.enableEmailNotifications = enableEmailNotifications;
     }
 }
