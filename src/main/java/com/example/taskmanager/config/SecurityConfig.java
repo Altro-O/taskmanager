@@ -31,7 +31,7 @@ public class SecurityConfig {
             )
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> csp
-                    .policyDirectives("frame-ancestors 'self' https://oauth.telegram.org http://150.241.83.127:8080/login")
+                    .policyDirectives("frame-ancestors 'self' https://oauth.telegram.org https://telegram.org http://150.241.83.127:8080")
                 )
                 .frameOptions().disable()
             )
