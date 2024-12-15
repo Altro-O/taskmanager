@@ -33,3 +33,16 @@ taskdb.*
 
 ### Environment Variables ###
 .env
+
+# Local configuration files
+*.local
+*-local.*
+*-local-*.*
+
+# Example files should be tracked
+!*.example
+!*.sample
+
+# Logs
+logs/
+*.log

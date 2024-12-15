@@ -31,7 +31,6 @@ public class FirebaseConfig {
 
             InputStream serviceAccount = null;
             
-            // Сначала пробуем использовать переменную окружения
             if (firebaseConfigEnv != null && !firebaseConfigEnv.trim().isEmpty()) {
                 try {
                     byte[] decodedConfig = Base64.getDecoder().decode(firebaseConfigEnv);
@@ -42,17 +41,8 @@ public class FirebaseConfig {
                 }
             }
 
-            // Если не получилось использовать переменную окружения, пробуем локальный файл
             if (serviceAccount == null) {
-                serviceAccount = getClass().getResourceAsStream("/firebase-config.json");
-                if (serviceAccount != null) {
-                    logger.info("Используется локальный файл конфигурации Firebase");
-                }
-            }
-
-            // Если оба способа не сработали, логируем ошибку и выходим
-            if (serviceAccount == null) {
-                logger.error("Не удалось найти конфигурацию Firebase. Убедитесь, что файл firebase-config.json находится в resources или установлена переменная окружения FIREBASE_CONFIG");
+                logger.warn("Firebase конфигурация не найдена или недействительна. Приложение продолжит работу без Firebase.");
                 return;
             }
 
