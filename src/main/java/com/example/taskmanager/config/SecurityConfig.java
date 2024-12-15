@@ -19,27 +19,8 @@ public class SecurityConfig {
     private CustomUserDetailsService userDetailsService;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .authorizeHttpRequests((requests) -> requests
-                .requestMatchers("/register", "/verify", "/css/**", "/js/**", "/h2-console/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin((form) -> form
-                .loginPage("/login")
-                .permitAll()
-                .defaultSuccessUrl("/", true)
-            )
-            .logout((logout) -> logout
-                .permitAll()
-                .logoutSuccessUrl("/login?logout"))
-            .authenticationProvider(authenticationProvider());
-
-        // Для работы с H2 консолью
-        http.csrf().disable();
-        http.headers().frameOptions().disable();
-
-        return http.build();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
@@ -51,7 +32,24 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests((requests) -> requests
+                .requestMatchers("/register", "/verify", "/css/**", "/js/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .formLogin((form) -> form
+                .loginPage("/login")
+                .usernameParameter("username")
+                .passwordParameter("password")
+                .permitAll()
+                .defaultSuccessUrl("/", true)
+            )
+            .logout((logout) -> logout
+                .permitAll()
+                .logoutSuccessUrl("/login?logout"))
+            .authenticationProvider(authenticationProvider());
+    
+        return http.build();
     }
-} 
+}
