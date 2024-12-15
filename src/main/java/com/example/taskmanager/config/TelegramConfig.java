@@ -16,7 +16,6 @@ public class TelegramConfig {
     @Bean
     public TelegramBotsApi telegramBotsApi(TaskManagerBot bot) throws TelegramApiException {
         try {
-            DefaultBotSession.setDefaultMaxThreads(1);
             TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
             api.registerBot(bot);
             log.info("Telegram bot successfully registered");
