@@ -13,6 +13,10 @@ import jakarta.persistence.CascadeType;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Task {
@@ -39,13 +43,24 @@ public class Task {
     @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Subtask> subtasks = new HashSet<>();
 
-    public enum Priority {
-        LOW, MEDIUM, HIGH
-    }
+    @Enumerated(EnumType.STRING)
+    private TimeLabel timeLabel;
+    
+    private int estimatedMinutes; // оценка времени выполнения
+    private String location; // место выполнения
+    
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaskNote> notes = new ArrayList<>();
+    
+    @ManyToOne
+    @JoinColumn(name = "template_id")
+    private TaskTemplate template; // связь с шаблоном
 
-    public enum Category {
-        РАБОТА, ЛИЧНОЕ, ПОКУПКИ, УЧЕБА
-    }
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    private LocalDateTime completedAt;
 
     // Getters and Setters
     public Long getId() {
@@ -152,5 +167,61 @@ public class Task {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    public TimeLabel getTimeLabel() {
+        return timeLabel;
+    }
+
+    public void setTimeLabel(TimeLabel timeLabel) {
+        this.timeLabel = timeLabel;
+    }
+
+    public int getEstimatedMinutes() {
+        return estimatedMinutes;
+    }
+
+    public void setEstimatedMinutes(int estimatedMinutes) {
+        this.estimatedMinutes = estimatedMinutes;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public List<TaskNote> getNotes() {
+        return notes;
+    }
+
+    public void setNotes(List<TaskNote> notes) {
+        this.notes = notes;
+    }
+
+    public TaskTemplate getTemplate() {
+        return template;
+    }
+
+    public void setTemplate(TaskTemplate template) {
+        this.template = template;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
     }
 }
