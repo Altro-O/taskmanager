@@ -29,6 +29,11 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .permitAll()
             )
+            .headers(headers -> headers
+                .contentSecurityPolicy(csp -> csp
+                    .policyDirectives("frame-ancestors 'self' https://oauth.telegram.org")
+                )
+            )
             .csrf(csrf -> csrf.disable());
 
         return http.build();
