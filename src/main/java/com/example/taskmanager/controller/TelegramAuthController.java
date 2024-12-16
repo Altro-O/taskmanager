@@ -26,8 +26,8 @@ public class TelegramAuthController {
     
     @GetMapping("/login")
     public String telegramLogin(Model model) {
-        String botUsername = "TaskManag3rBot";
-        model.addAttribute("botUsername", botUsername);
+        model.addAttribute("botUsername", "TaskManag3rBot");
+        model.addAttribute("botDomain", "mytasks.store");
         return "telegram-login";
     }
     
