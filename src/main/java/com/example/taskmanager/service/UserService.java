@@ -34,7 +34,9 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     
     public void registerUser(String email, String password, String name) throws MessagingException {
+        log.info("Attempting to register user with email: {}", email);
         if (userRepository.findByEmail(email).isPresent()) {
+            log.warn("User with email {} already exists", email);
             throw new RuntimeException("Пользователь с таким email уже существует");
         }
         
@@ -176,5 +178,14 @@ public class UserService {
             result.append(String.format("%02x", b));
         }
         return result.toString();
+    }
+    
+    public User findByEmail(String email) {
+        log.info("Looking for user with email: {}", email);
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> {
+                log.warn("User not found with email: {}", email);
+                return new RuntimeException("Пользователь не найден");
+            });
     }
 } 
