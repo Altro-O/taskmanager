@@ -106,28 +106,29 @@
                 data-telegram-login="TaskManag3rBot"
                 data-size="large"
                 data-auth-url="https://mytasks.store/telegram-auth/callback"
-                data-request-access="write">
+                data-request-access="write"
+                onauth="onTelegramAuth(user)">
             </script>
         </div>
     </div>
+
     <script>
-        function onTelegramAuth(user) {
-            console.log('Telegram auth:', user);
-            fetch('/telegram-auth/callback', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(user)
-            })
-            .then(response => {
-                console.log('Response:', response);
-                if (response.ok) {
-                    window.location.href = '/';
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
+    function onTelegramAuth(user) {
+        fetch('/telegram-auth/callback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(user)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.redirectUrl) {
+                window.location.href = data.redirectUrl;
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
     </script>
 </body>
 </html>

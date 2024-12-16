@@ -35,6 +35,7 @@ public class UserService {
     
     public void registerUser(String email, String password, String name) throws MessagingException {
         log.info("Attempting to register user with email: {}", email);
+        
         if (userRepository.findByEmail(email).isPresent()) {
             log.warn("User with email {} already exists", email);
             throw new RuntimeException("Пользователь с таким email уже существует");
@@ -45,7 +46,9 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(password));
         user.setName(name);
         user.setEnabled(false);
-        userRepository.save(user);
+        
+        User savedUser = userRepository.save(user);
+        log.info("User registered successfully with id: {}", savedUser.getId());
         
         String verificationCode = generateVerificationCode();
         createVerificationToken(user, verificationCode);

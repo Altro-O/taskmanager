@@ -43,7 +43,8 @@ public class TelegramAuthController {
                 );
                 SecurityContextHolder.getContext().setAuthentication(auth);
                 
-                return ResponseEntity.ok().build();
+                return ResponseEntity.ok()
+                    .body(Collections.singletonMap("redirectUrl", "/"));
             }
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
