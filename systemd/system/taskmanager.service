@@ -1,0 +1,1 @@
+Environment="DATABASE_PUBLIC_URL=jdbc:postgresql://monorail.proxy.rlwy.net:5432/railway" 

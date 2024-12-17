@@ -6,11 +6,12 @@ import jakarta.persistence.*;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Arrays;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "users")
+@Table(name = "app_users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,15 +21,18 @@ public class User {
     private String email;
     private String password;
     private boolean enabled;
-    private String name;
-    private Long telegramChatId;
-
-    @ElementCollection
-    private Set<Integer> reminderHours = new HashSet<>(Arrays.asList(24, 1)); // По умолчанию за 24 часа и за 1 час
-
-    private boolean enableTelegramNotifications = true;
-    private boolean enableEmailNotifications = true;
-
+    
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+    
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
+    
     // Геттеры
     public Long getId() {
         return id;
@@ -50,24 +54,12 @@ public class User {
         return enabled;
     }
 
-    public String getName() {
-        return name;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public Long getTelegramChatId() {
-        return telegramChatId;
-    }
-
-    public Set<Integer> getReminderHours() {
-        return reminderHours;
-    }
-
-    public boolean isEnableTelegramNotifications() {
-        return enableTelegramNotifications;
-    }
-
-    public boolean isEnableEmailNotifications() {
-        return enableEmailNotifications;
+    public Set<Role> getRoles() {
+        return roles;
     }
 
     // Сеттеры
@@ -91,23 +83,11 @@ public class User {
         this.enabled = enabled;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public void setTelegramChatId(Long telegramChatId) {
-        this.telegramChatId = telegramChatId;
-    }
-
-    public void setReminderHours(Set<Integer> reminderHours) {
-        this.reminderHours = reminderHours;
-    }
-
-    public void setEnableTelegramNotifications(boolean enableTelegramNotifications) {
-        this.enableTelegramNotifications = enableTelegramNotifications;
-    }
-
-    public void setEnableEmailNotifications(boolean enableEmailNotifications) {
-        this.enableEmailNotifications = enableEmailNotifications;
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 }

@@ -1,0 +1,41 @@
+# Настройки Thymeleaf
+spring.thymeleaf.prefix=classpath:/templates/
+spring.thymeleaf.suffix=.html
+
+# Настройки базы данных PostgreSQL
+spring.datasource.url=jdbc:postgresql://<YOUR-PROJECT-ID>.supabase.co:5432/postgres
+spring.datasource.username=postgres
+spring.datasource.password=<YOUR-DB-PASSWORD>
+
+# Дополнительные настройки подключения
+spring.datasource.hikari.connection-timeout=20000
+spring.datasource.hikari.maximum-pool-size=5
+spring.datasource.hikari.minimum-idle=1
+spring.datasource.hikari.idle-timeout=300000
+spring.datasource.hikari.max-lifetime=1200000
+
+# SSL настройки (важно для Supabase)
+spring.datasource.hikari.data-source-properties.ssl=true
+spring.datasource.hikari.data-source-properties.sslmode=require
+spring.datasource.hikari.data-source-properties.sslfactory=org.postgresql.ssl.NonValidatingFactory
+
+# Настройки JPA
+spring.jpa.show-sql=false
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+# Настройки поч��ы Gmail
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=${MAIL_USERNAME:your-email@gmail.com}
+spring.mail.password=${MAIL_PASSWORD:your-app-password}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# URL приложения
+app.base-url=https://mytasks.store
+
+# Настройки бота
+bot.username=${BOT_USERNAME:your-bot-username}
+bot.token=${BOT_TOKEN:your-bot-token} 
