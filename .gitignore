@@ -21,10 +21,6 @@ target/
 ### VS Code ###
 .vscode/
 
-### Firebase ###
-firebase-config.json
-src/main/resources/firebase-config.json
-
 ### Database ###
 *.db
 *.mv.db
