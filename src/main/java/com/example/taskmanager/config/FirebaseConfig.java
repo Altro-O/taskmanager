@@ -1,61 +1,35 @@
 package com.example.taskmanager.config;
 
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.firestore.Firestore;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import org.springframework.context.annotation.Configuration;
+import com.google.firebase.cloud.FirestoreClient;
 import org.springframework.beans.factory.annotation.Value;
-import javax.annotation.PostConstruct;
-import java.io.ByteArrayInputStream;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Configuration
 public class FirebaseConfig {
-    
-    private static final Logger logger = LoggerFactory.getLogger(FirebaseConfig.class);
 
-    @Value("${FIREBASE_CONFIG:}")
-    private String firebaseConfigEnv;
+    @Value("${firebase.config-path}")
+    private String configPath;
 
-    @PostConstruct
-    public void initialize() {
-        try {
-            if (!FirebaseApp.getApps().isEmpty()) {
-                logger.info("Firebase уже инициализирован");
-                return;
-            }
+    @Bean
+    public Firestore firestore() throws IOException {
+        ClassPathResource resource = new ClassPathResource(configPath);
+        
+        FirebaseOptions options = FirebaseOptions.builder()
+            .setCredentials(GoogleCredentials.fromStream(resource.getInputStream()))
+            .build();
 
-            InputStream serviceAccount = null;
-            
-            if (firebaseConfigEnv != null && !firebaseConfigEnv.trim().isEmpty()) {
-                try {
-                    byte[] decodedConfig = Base64.getDecoder().decode(firebaseConfigEnv);
-                    serviceAccount = new ByteArrayInputStream(decodedConfig);
-                    logger.info("Используется конфигурация Firebase из переменной окружения");
-                } catch (IllegalArgumentException e) {
-                    logger.warn("Ошибка декодирования конфигурации Firebase из переменной окружения: {}", e.getMessage());
-                }
-            }
-
-            if (serviceAccount == null) {
-                logger.warn("Firebase конфигурация не найдена или недействительна. Приложение продолжит работу без Firebase.");
-                return;
-            }
-
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .build();
-
+        if (FirebaseApp.getApps().isEmpty()) {
             FirebaseApp.initializeApp(options);
-            logger.info("Firebase успешно инициализирован");
-
-        } catch (IOException e) {
-            logger.error("Ошибка при инициализации Firebase: {}", e.getMessage());
-            logger.info("Приложение продолжит работу без интеграции с Firebase");
         }
+
+        return FirestoreClient.getFirestore();
     }
 }

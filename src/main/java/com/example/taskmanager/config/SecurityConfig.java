@@ -1,6 +1,7 @@
 package com.example.taskmanager.config;
 
 import com.example.taskmanager.service.CustomUserDetailsService;
+import com.example.taskmanager.service.FirebaseAuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration
 @EnableWebSecurity
@@ -19,9 +21,12 @@ public class SecurityConfig {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
+    @Autowired
+    private FirebaseAuthService firebaseAuthService;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean
@@ -29,25 +34,37 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(requests -> requests
                 .requestMatchers("/register", "/verify", "/login", "/telegram-auth/**",
-                               "/css/**", "/js/**", "/h2-console/**").permitAll()
+                               "/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")
                 .permitAll()
+                .defaultSuccessUrl("/", true)
                 .failureHandler((request, response, exception) -> {
                     log.error("Login failed: {}", exception.getMessage());
                     response.sendRedirect("/login?error");
                 })
             )
+            .logout(logout -> logout
+                .logoutSuccessUrl("/login?logout")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(true)
+            )
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/h2-console/**")
-                .disable()
+                .ignoringRequestMatchers("/h2-console/**", "/telegram-auth/**")
             )
             .headers(headers -> headers
                 .frameOptions().sameOrigin()
-            )
-            .userDetailsService(userDetailsService);
+                .xssProtection()
+                .and()
+                .contentSecurityPolicy("default-src 'self'")
+            );
 
         return http.build();
     }

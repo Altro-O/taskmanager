@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Вход через Telegram</title>
+    <script async src="https://telegram.org/js/telegram-widget.js?22"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Вход через Telegram</h2>
+        <div id="telegram-login">
+            <script>
+                function onTelegramAuth(user) {
+                    fetch('/telegram/auth', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(user)
+                    })
+                    .then(response => response.text())
+                    .then(result => {
+                        if (result === 'success') {
+                            window.location.href = '/tasks';
+                        } else {
+                            alert('Ошибка авторизации');
+                        }
+                    });
+                }
+            </script>
+            <div id="telegram-login-bot">
+                <script th:inline="javascript">
+                    var botUsername = [[${@environment.getProperty('bot.username')}]];
+                    TelegramLoginWidget.dataOnauth = onTelegramAuth;
+                </script>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
